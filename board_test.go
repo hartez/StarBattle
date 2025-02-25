@@ -10,19 +10,7 @@ func TestCanParseSimpleBoardFromFile(test *testing.T) {
 	expectedSize := 5
 	expectedStars := 1
 
-	board := Parse(testFile)
-
-	if board.size != expectedSize {
-		test.Fatalf("Board size should be %d in %s, but found %d", expectedSize, testFile, board.size)
-	}
-
-	if board.stars != expectedStars {
-		test.Fatalf("Board stars should be %d in %s, but found %d", expectedStars, testFile, board.stars)
-	}
-
-	if len(board.regions) != expectedSize {
-		test.Fatalf("Board should have %d regions, but found %d", expectedSize, len(board.regions))
-	}
+	checkExpectedValues(expectedSize, expectedStars, testFile, test)
 }
 
 func TestCanParseComplexBoardFromFile(test *testing.T) {
@@ -31,6 +19,46 @@ func TestCanParseComplexBoardFromFile(test *testing.T) {
 	expectedSize := 14
 	expectedStars := 3
 
+	checkExpectedValues(expectedSize, expectedStars, testFile, test)
+}
+
+func TestRegionMappingsFromFile(test *testing.T) {
+	testFile := "5_1.txt"
+
+	board := Parse(testFile)
+
+	// Spot check some region mappings
+	checkRegion(board, 0, 0, 0, test)
+	checkRegion(board, 4, 4, 3, test)
+}
+
+func checkRegion(board Board, row int, col int, expectedRegion int, test *testing.T) {
+	actualRegion, _ := board.region(row, col)
+
+	if actualRegion != expectedRegion {
+		test.Fatalf("Expected square at %d, %d to be in region %d, but found %d", row, col, expectedRegion, actualRegion)
+	}
+}
+
+func checkExpectedRegions(board Board, test *testing.T) {
+
+	sections := make([]bool, board.size)
+
+	for row := 0; row < board.size; row++ {
+		for column := 0; column < board.size; column++ {
+			region, _ := board.region(row, column)
+			sections[region] = true
+		}
+	}
+
+	for i := 0; i < len(sections); i++ {
+		if !sections[i] {
+			test.Fatalf("Missing expected section %d", i)
+		}
+	}
+}
+
+func checkExpectedValues(expectedSize int, expectedStars int, testFile string, test *testing.T) {
 	board := Parse(testFile)
 
 	if board.size != expectedSize {
@@ -41,32 +69,5 @@ func TestCanParseComplexBoardFromFile(test *testing.T) {
 		test.Fatalf("Board stars should be %d in %s, but found %d", expectedStars, testFile, board.stars)
 	}
 
-	if len(board.regions) != expectedSize {
-		test.Fatalf("Board should have %d regions, but found %d", expectedSize, len(board.regions))
-	}
-}
-
-func TestRegionMappingsFromFile(test *testing.T) {
-	testFile := "5_1.txt"
-
-	board := Parse(testFile)
-
-	// Spot check some region mappings
-	row := 0
-	col := 0
-	expectedRegion := 0
-	actualRegion, _ := board.region(row, col)
-
-	if actualRegion != expectedRegion {
-		test.Fatalf("Expected square at %d, %d to be in region %d, but found %d", row, col, expectedRegion, actualRegion)
-	}
-
-	row = 4
-	col = 4
-	expectedRegion = 3
-	actualRegion, _ = board.region(row, col)
-
-	if actualRegion != expectedRegion {
-		test.Fatalf("Expected square at %d, %d to be in region %d, but found %d", row, col, expectedRegion, actualRegion)
-	}
+	checkExpectedRegions(board, test)
 }
