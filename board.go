@@ -29,6 +29,7 @@ func newBoard(size int, stars int) Board {
 }
 
 func Parse(fileName string) Board {
+
 	content, err := os.ReadFile(fileName)
 
 	if err != nil {
