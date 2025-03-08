@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -12,9 +13,17 @@ func main() {
 		puzzleFile = os.Args[1]
 	}
 
-	fmt.Printf("Working on %s\n", puzzleFile)
-
 	board := Parse(puzzleFile)
 
+	fmt.Printf("Working on %s\n", puzzleFile)
 	fmt.Print(board)
+
+	_, solution, err := board.Solve()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Solved!\n")
+	fmt.Print(solution)
 }
