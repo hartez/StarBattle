@@ -23,7 +23,7 @@ func TestBenchmarkMedium(test *testing.T) {
 }
 
 func TestBenchmarkHard(test *testing.T) {
-	board := Parse("14_3_2.txt")
+	board := Parse("14_3.txt")
 	err := board.solveAndVerify()
 
 	if err != nil {
