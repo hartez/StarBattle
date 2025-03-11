@@ -361,10 +361,11 @@ func (board Board) countInRegion(region int) (stars int, notStars int, size int)
 }
 
 func (board Board) eliminateSquares(row int, column int) {
+
 	board.eliminateSquaresInColumn(column)
 	board.eliminateSquaresInRow(row)
 	board.eliminateAdjacentSquares(row, column)
-	board.elmininateSquaresInSection(row, column)
+	board.elmininateSquaresInRegion(row, column)
 }
 
 func (board Board) eliminateSquaresInRow(row int) {
@@ -385,7 +386,7 @@ func (board Board) eliminateSquaresInRow(row int) {
 	}
 }
 
-func (board Board) elmininateSquaresInSection(row int, column int) {
+func (board Board) elmininateSquaresInRegion(row int, column int) {
 
 	region, err := board.region(row, column)
 
@@ -401,7 +402,7 @@ func (board Board) elmininateSquaresInSection(row int, column int) {
 
 	regionMap := board.regions[region]
 
-	for squareIndex := range regionMap {
+	for _, squareIndex := range regionMap {
 		if board.squares[squareIndex] == UNKNOWN {
 			board.squares[squareIndex] = NOTSTAR
 		}
