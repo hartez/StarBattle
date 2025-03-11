@@ -256,35 +256,57 @@ func TestIsValidIfStarsInRegionLessThanPuzzleLimit(test *testing.T) {
 	}
 }
 
-func TestIsInvalidIfStarsAreDiagonallyAdjacent(test *testing.T) {
-	board := Parse("10_2.txt")
+func (board Board) solveAndVerify() error {
+	isSolved, solvedBoard, err := board.Solve()
 
-	board.setValue(0, 0, STAR)
-	board.setValue(1, 1, STAR)
-
-	if board.isValid() {
-		test.Fatalf("Board should be invalid because two stars are adjacent")
+	if !isSolved || err != nil {
+		return fmt.Errorf("board was not solved")
 	}
+
+	if !solvedBoard.ensureNoAdjacentStars() {
+		return fmt.Errorf("solution was invalid, adjacent stars found")
+	}
+
+	return nil
 }
 
-func TestIsInvalidIfStarsAreVerticallyAdjacent(test *testing.T) {
-	board := Parse("10_2.txt")
+func (board Board) ensureNoAdjacentStars() bool {
 
-	board.setValue(0, 0, STAR)
-	board.setValue(1, 0, STAR)
+	boardSize := board.size
 
-	if board.isValid() {
-		test.Fatalf("Board should be invalid because two stars are adjacent")
+	for index, square := range board.squares {
+		if square == STAR {
+			if board.anyAdjacentStars(index/boardSize, index%boardSize) {
+				return false
+			}
+		}
 	}
+
+	return true
 }
 
-func TestIsInvalidIfStarsAreHorizontallyAdjacent(test *testing.T) {
-	board := Parse("10_2.txt")
+func (board Board) anyAdjacentStars(row int, column int) bool {
+	squares := board.squares
 
-	board.setValue(0, 1, STAR)
-	board.setValue(0, 2, STAR)
+	for r := -1; r <= 1; r++ {
+		for c := -1; c < 1; c++ {
 
-	if board.isValid() {
-		test.Fatalf("Board should be invalid because two stars are adjacent")
+			if r == 0 && c == 0 {
+				continue
+			}
+
+			index, err := board.index(row+r, column+c)
+
+			if err != nil {
+				// The row/column is off the edge of the board, ignore it
+				continue
+			}
+
+			if squares[index] == STAR {
+				return true
+			}
+		}
 	}
+
+	return false
 }

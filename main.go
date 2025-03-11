@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
@@ -18,7 +19,11 @@ func main() {
 	fmt.Printf("Working on %s\n", puzzleFile)
 	fmt.Print(board)
 
+	start := time.Now()
+
 	_, solution, err := board.Solve()
+
+	end := time.Now()
 
 	if err != nil {
 		log.Fatal(err)
@@ -26,4 +31,5 @@ func main() {
 
 	fmt.Printf("Solved!\n")
 	fmt.Print(solution)
+	fmt.Printf("Solve time was %s\n", end.Sub(start))
 }

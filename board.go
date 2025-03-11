@@ -166,6 +166,8 @@ func (board Board) Solve() (bool, Board, error) {
 
 	nextBoard.setValue(nextRow, nextCol, STAR)
 
+	nextBoard.eliminateSquares(nextRow, nextCol)
+
 	solved, solvedBoard, err := nextBoard.Solve()
 
 	if err != nil {
@@ -265,8 +267,9 @@ func (board Board) isValid() bool {
 			return false
 		}
 
-		if stars+notStars == boardSize && stars < requiredStars {
-			// If the row is full and we don't have enough stars, the board is invalid
+		// This covers the case where the row is full and there aren't enough stars
+		// And the case where the number of unknown spaces is not enough to account for the remaining stars we need
+		if requiredStars > boardSize-notStars {
 			return false
 		}
 	}
@@ -278,7 +281,7 @@ func (board Board) isValid() bool {
 			return false
 		}
 
-		if stars+notStars == boardSize && stars < requiredStars {
+		if requiredStars > boardSize-notStars {
 			return false
 		}
 	}
@@ -291,16 +294,8 @@ func (board Board) isValid() bool {
 			return false
 		}
 
-		if stars+notStars == regionSize && stars < requiredStars {
+		if requiredStars > regionSize-notStars {
 			return false
-		}
-	}
-
-	for index, square := range board.squares {
-		if square == STAR {
-			if board.anyAdjacentStars(index/boardSize, index%boardSize) {
-				return false
-			}
 		}
 	}
 
@@ -365,28 +360,88 @@ func (board Board) countInRegion(region int) (stars int, notStars int, size int)
 	return
 }
 
-func (board Board) anyAdjacentStars(row int, column int) bool {
-	squares := board.squares
+func (board Board) eliminateSquares(row int, column int) {
+	board.eliminateSquaresInColumn(column)
+	board.eliminateSquaresInRow(row)
+	board.eliminateAdjacentSquares(row, column)
+	board.elmininateSquaresInSection(row, column)
+}
 
-	for r := -1; r <= 1; r++ {
-		for c := -1; c < 1; c++ {
+func (board Board) eliminateSquaresInRow(row int) {
+	starCount, _ := board.countInRow(row)
+	if starCount == board.stars {
+		for col := range board.size {
 
-			if r == 0 && c == 0 {
-				continue
-			}
-
-			index, err := board.index(row+r, column+c)
+			value, err := board.value(row, col)
 
 			if err != nil {
-				// The row/column is off the edge of the board, ignore it
-				continue
+				log.Fatal(err)
 			}
 
-			if squares[index] == STAR {
-				return true
+			if value == UNKNOWN {
+				board.setValue(row, col, NOTSTAR)
 			}
 		}
 	}
+}
 
-	return false
+func (board Board) elmininateSquaresInSection(row int, column int) {
+
+	region, err := board.region(row, column)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	starCount, _, _ := board.countInRegion(region)
+
+	if starCount < board.stars {
+		return
+	}
+
+	regionMap := board.regions[region]
+
+	for squareIndex := range regionMap {
+		if board.squares[squareIndex] == UNKNOWN {
+			board.squares[squareIndex] = NOTSTAR
+		}
+	}
+}
+
+func (board Board) eliminateSquaresInColumn(col int) {
+	starCount, _ := board.countInColumn(col)
+	if starCount == board.stars {
+		for row := range board.size {
+
+			value, err := board.value(row, col)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if value == UNKNOWN {
+				board.setValue(row, col, NOTSTAR)
+			}
+		}
+	}
+}
+
+func (board Board) eliminateAdjacentSquares(row int, col int) {
+
+	for r := row - 1; r <= row+1; r++ {
+		for c := col - 1; c <= col+1; c++ {
+			if r >= 0 && c >= 0 && c < board.size && r < board.size {
+
+				value, err := board.value(r, c)
+
+				if err != nil {
+					continue
+				}
+
+				if value == UNKNOWN {
+					board.setValue(r, c, NOTSTAR)
+				}
+			}
+		}
+	}
 }
