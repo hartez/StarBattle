@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 )
@@ -21,15 +20,16 @@ func main() {
 
 	start := time.Now()
 
-	_, solution, err := board.Solve()
+	isSolved, solution := board.Solve()
 
 	end := time.Now()
 
-	if err != nil {
-		log.Fatal(err)
+	if isSolved {
+		fmt.Printf("Solved!\n")
+		fmt.Print(solution)
+	} else {
+		fmt.Printf("Puzzle could not be solved.\n")
 	}
 
-	fmt.Printf("Solved!\n")
-	fmt.Print(solution)
 	fmt.Printf("Solve time was %s\n", end.Sub(start))
 }

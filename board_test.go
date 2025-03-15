@@ -257,9 +257,9 @@ func TestIsValidIfStarsInRegionLessThanPuzzleLimit(test *testing.T) {
 }
 
 func (board Board) solveAndVerify() error {
-	isSolved, solvedBoard, err := board.Solve()
+	isSolved, solvedBoard := board.Solve()
 
-	if !isSolved || err != nil {
+	if !isSolved {
 		return fmt.Errorf("board was not solved")
 	}
 
@@ -309,4 +309,15 @@ func (board Board) anyAdjacentStars(row int, column int) bool {
 	}
 
 	return false
+}
+
+func TestBrokenPuzzle(test *testing.T) {
+	testFile := "broken_puzzle.txt"
+	board := Parse(testFile)
+
+	isSolved, _ := board.Solve()
+
+	if isSolved {
+		test.Fatalf("puzzle is not solvable")
+	}
 }

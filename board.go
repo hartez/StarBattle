@@ -146,20 +146,20 @@ func (original Board) copy() Board {
 	return board
 }
 
-func (board Board) Solve() (bool, Board, error) {
+func (board Board) Solve() (bool, Board) {
 
 	if !board.isValid() {
-		return false, board, nil
+		return false, board
 	}
 
 	if board.hasEnoughStars() {
-		return true, board, nil
+		return true, board
 	}
 
 	nextRow, nextCol, err := board.findEmptySquare()
 
 	if err != nil {
-		return false, board, fmt.Errorf("no solution found")
+		return false, board
 	}
 
 	nextBoard := board.copy()
@@ -168,14 +168,14 @@ func (board Board) Solve() (bool, Board, error) {
 
 	nextBoard.eliminateSquares(nextRow, nextCol)
 
-	solved, solvedBoard, err := nextBoard.Solve()
+	solved, solvedBoard := nextBoard.Solve()
 
 	if err != nil {
-		return false, board, fmt.Errorf("no solution found")
+		return false, board
 	}
 
 	if solved {
-		return true, solvedBoard, nil
+		return true, solvedBoard
 	}
 
 	nextBoard = board.copy()
