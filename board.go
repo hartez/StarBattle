@@ -170,10 +170,6 @@ func (board Board) Solve() (bool, Board) {
 
 	solved, solvedBoard := nextBoard.Solve()
 
-	if err != nil {
-		return false, board
-	}
-
 	if solved {
 		return true, solvedBoard
 	}
