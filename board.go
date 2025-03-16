@@ -442,3 +442,34 @@ func (board Board) eliminateAdjacentSquares(row int, col int) {
 		}
 	}
 }
+
+func (board Board) SolveParallel(solution chan Board) {
+
+	if !board.isValid() {
+		return
+	}
+
+	if board.hasEnoughStars() {
+		solution <- board
+		return
+	}
+
+	nextRow, nextCol, err := board.findEmptySquare()
+
+	if err != nil {
+		return
+	}
+
+	nextBoard := board.copy()
+
+	nextBoard.setValue(nextRow, nextCol, STAR)
+
+	nextBoard.eliminateSquares(nextRow, nextCol)
+
+	go nextBoard.SolveParallel(solution)
+
+	nextBoard = board.copy()
+	nextBoard.setValue(nextRow, nextCol, NOTSTAR)
+
+	go nextBoard.SolveParallel(solution)
+}
