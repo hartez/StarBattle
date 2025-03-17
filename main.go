@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"runtime"
@@ -45,8 +46,6 @@ func SolveSequential(puzzleFile string) {
 func SolveInParallel(puzzleFile string) {
 	board := Parse(puzzleFile)
 
-	solutionChannel := make(chan Board)
-
 	maxProcs := runtime.GOMAXPROCS(0)
 	numCPU := runtime.NumCPU()
 
@@ -54,11 +53,16 @@ func SolveInParallel(puzzleFile string) {
 	fmt.Printf("Working on %s\n", puzzleFile)
 	fmt.Print(board)
 
+	solutionChannel := make(chan Board)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	start := time.Now()
 
-	go board.SolveParallel(solutionChannel)
+	go board.SolveParallel(solutionChannel, ctx)
 
 	solution := <-solutionChannel
+	cancel()
 
 	end := time.Now()
 
