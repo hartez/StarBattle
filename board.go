@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Board struct {
@@ -444,7 +445,9 @@ func (board Board) eliminateAdjacentSquares(row int, col int) {
 	}
 }
 
-func (board Board) SolveParallel(solution chan Board, ctx context.Context) {
+func (board Board) SolveParallel(solution chan *Board, wg *sync.WaitGroup, ctx context.Context) {
+
+	defer wg.Done()
 
 	select {
 	case <-ctx.Done():
@@ -455,7 +458,7 @@ func (board Board) SolveParallel(solution chan Board, ctx context.Context) {
 		}
 
 		if board.hasEnoughStars() {
-			solution <- board
+			solution <- &board
 			return
 		}
 
@@ -471,11 +474,13 @@ func (board Board) SolveParallel(solution chan Board, ctx context.Context) {
 
 		nextBoard.eliminateSquares(nextRow, nextCol)
 
-		go nextBoard.SolveParallel(solution, ctx)
+		wg.Add(1)
+		go nextBoard.SolveParallel(solution, wg, ctx)
 
 		nextBoard = board.copy()
 		nextBoard.setValue(nextRow, nextCol, NOTSTAR)
 
-		go nextBoard.SolveParallel(solution, ctx)
+		wg.Add(1)
+		go nextBoard.SolveParallel(solution, wg, ctx)
 	}
 }
