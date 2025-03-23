@@ -445,7 +445,31 @@ func (board Board) eliminateAdjacentSquares(row int, col int) {
 	}
 }
 
-func (board Board) SolveParallel(solution chan *Board, wg *sync.WaitGroup, ctx context.Context) {
+func (board Board) SolveParallel() (bool, *Board) {
+	solutionChannel := make(chan *Board)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go board.solveParallel(solutionChannel, &wg, ctx)
+
+	go func() {
+		wg.Wait()
+		solutionChannel <- nil
+	}()
+
+	solution := <-solutionChannel
+
+	if solution == nil {
+		return false, nil
+	} else {
+		return true, solution
+	}
+}
+
+func (board Board) solveParallel(solution chan *Board, wg *sync.WaitGroup, ctx context.Context) {
 
 	defer wg.Done()
 
@@ -475,12 +499,12 @@ func (board Board) SolveParallel(solution chan *Board, wg *sync.WaitGroup, ctx c
 		nextBoard.eliminateSquares(nextRow, nextCol)
 
 		wg.Add(1)
-		go nextBoard.SolveParallel(solution, wg, ctx)
+		go nextBoard.solveParallel(solution, wg, ctx)
 
 		nextBoard = board.copy()
 		nextBoard.setValue(nextRow, nextCol, NOTSTAR)
 
 		wg.Add(1)
-		go nextBoard.SolveParallel(solution, wg, ctx)
+		go nextBoard.solveParallel(solution, wg, ctx)
 	}
 }

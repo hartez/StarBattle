@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"runtime"
-	"sync"
 	"time"
 )
 
@@ -54,30 +52,15 @@ func SolveInParallel(puzzleFile string) {
 	fmt.Printf("Working on %s\n", puzzleFile)
 	fmt.Print(board)
 
-	solutionChannel := make(chan *Board)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-
 	start := time.Now()
 
-	go board.SolveParallel(solutionChannel, &wg, ctx)
+	isSolved, solution := board.SolveParallel()
 
-	go func() {
-		wg.Wait()
-		solutionChannel <- nil
-	}()
-
-	solution := <-solutionChannel
 	end := time.Now()
 
-	if solution == nil {
+	if !isSolved {
 		fmt.Printf("Could not find a solution\n")
 	} else {
-		cancel()
 		fmt.Printf("Solved!\n")
 		fmt.Print(solution)
 	}
